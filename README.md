@@ -1,30 +1,10 @@
-# React Demo
-
-A repository to demonstrate a basic integration of 
-[Web3-Onboard](https://github.com/blocknative/web3-onboard) 
-and [Notify](https://github.com/blocknative/notify) into a React project.
-For detailed documentation, head to [docs.blocknative.com](https://docs.blocknative.com)
-
+# Candide Security Center
 
 <div align="center">
-  <img style="border-radius: 8px" width="75%" src="assets/react-demo-updated.png">
+  <img style="border-radius: 8px" width="75%" src="src/icons/logo.png">
 </div>
 
-View live demo [here](https://reactdemo.blocknative.com/)!
-
 ## Getting started
-
-Clone the repo:
-
-```bash
-git clone https://github.com/blocknative/react-demo.git
-```
-
-Navigate to the project directory:
-
-```bash
-cd react-demo
-```
 
 Install the dependencies:
 
