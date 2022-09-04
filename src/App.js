@@ -147,7 +147,7 @@ const App = () => {
       <section className="main">
         <div className="main-content">
           <div className="vertical-main-container">
-          <h1>Guardians Security</h1>
+            <h1 style={{ fontSize: '3.5rem' }}>Guardians Security</h1>
             <div className="container onboard">
               <img
                 className="logo"

@@ -1,7 +1,7 @@
 body {
   font-family: sans-serif;;
   font-style: normal;
-  background-color: #c2c4c9;
+  background-image: url("./icons/desert-background.jpg");
   max-width: 100vw;
   overflow: hidden;
   margin: 0;
@@ -19,6 +19,7 @@ main {
 .main-content {
   display: flex;
   justify-content: center;
+  color: white;
   padding: 16px 0;
 }
 
@@ -27,7 +28,7 @@ main {
 }
 
 .container {
-  background: #383c48;
+  background: #2f4858;
   display: flex;
   justify-content: center;
   align-items: center;
