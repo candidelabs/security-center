@@ -1,9 +1,9 @@
 {
-  "short_name": "Blocknative",
-  "name": "Blocknative Demo",
+  "short_name": "Candide",
+  "name": "Candide Guardian Recovery",
   "icons": [
     {
-      "src": "blocknative-favicon.ico",
+      "src": "logo192.png",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     }
@@ -12,6 +12,6 @@
   "display": "standalone",
   "theme_color": "#000000",
   "background_color": "#ffffff",
-  "description": "A React Demo app for Web3-Onboard and Notify",
-  "iconPath": "blocknative-favicon.ico"
+  "description": "Candide Security Center for Wallet Recovery",
+  "iconPath": "logo192.png"
 }
