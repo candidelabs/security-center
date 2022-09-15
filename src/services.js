@@ -53,7 +53,7 @@ export const initWeb3Onboard = init({
   },
   accountCenter: {
     desktop: {
-      position: 'topRight',
+      position: 'bottomLeft',
       enabled: true,
       minimal: false
     }

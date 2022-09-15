@@ -8,8 +8,16 @@ import {
   useSetChain,
   useWallets,
 } from '@web3-onboard/react'
-import logo from './icons/logo.png'
+import logo from './icons/logov3.svg'
 import './App.css'
+import {isValid} from "./utils/address";
+import {RecoveryRequestCard} from "./components/RecoveryRequestCard";
+import axios from "axios";
+import LoadingButton from "@mui/material/Button";
+import {Alert, Snackbar} from "@mui/material";
+import LoadingOverlay from 'react-loading-overlay';
+import {contracts} from "testing-wallet-helper-functions";
+require('dotenv').config()
 
 if (window.innerWidth < 700) {
   new VConsole()
@@ -17,33 +25,19 @@ if (window.innerWidth < 700) {
 
 let provider
 
-const internalTransferABI = [
-  {
-    inputs: [
-      {
-        internalType: 'address payable',
-        name: 'to',
-        type: 'address'
-      }
-    ],
-    name: 'internalTransfer',
-    outputs: [],
-    stateMutability: 'payable',
-    type: 'function'
-  }
-]
-
-let internalTransferContract
-
 const App = () => {
   const [{ wallet }, connect] = useConnectWallet()
   const [{ chains, connectedChain, settingChain }, setChain] = useSetChain()
   const [notifications, customNotification] = useNotifications()
   const connectedWallets = useWallets()
-
   const [web3Onboard, setWeb3Onboard] = useState(null)
-
   const [toAddress, setToAddress] = useState('')
+  const [fetchingRequests, setFetchingRequests] = useState(false)
+  const [loadingActive, setLoadingActive] = useState(false)
+  const [openSnackBar, setOpenSnackBar] = useState(false)
+  const [snackBarMessage, setSnackBarMessage] = useState("")
+  const [recoveryRequests, setRecoveryRequests] = useState([])
+  const [minimumSignatures, setMinimumSignatures] = useState(0)
 
   useEffect(() => {
     setWeb3Onboard(initWeb3Onboard)
@@ -63,25 +57,6 @@ const App = () => {
       'connectedWallets',
       JSON.stringify(connectedWalletsLabelArray)
     )
-
-    // Check for Magic Wallet user session
-    if (connectedWalletsLabelArray.includes('Magic Wallet')) {
-      const [magicWalletProvider] = connectedWallets.filter(
-        provider => provider.label === 'Magic Wallet'
-      )
-      async function setMagicUser() {
-        try {
-          const { email } =
-            await magicWalletProvider.instance.user.getMetadata()
-          const magicUserEmail = localStorage.getItem('magicUserEmail')
-          if (!magicUserEmail || magicUserEmail !== email)
-            localStorage.setItem('magicUserEmail', email)
-        } catch (err) {
-          throw err
-        }
-      }
-      setMagicUser()
-    }
   }, [connectedWallets, wallet])
 
   useEffect(() => {
@@ -89,12 +64,6 @@ const App = () => {
       provider = null
     } else {
       provider = new ethers.providers.Web3Provider(wallet.provider, 'any')
-
-      internalTransferContract = new ethers.Contract(
-        '0xb8c12850827ded46b9ded8c1b6373da0c4d60370',
-        internalTransferABI,
-        provider.getUncheckedSigner()
-      )
     }
   }, [wallet])
 
@@ -108,7 +77,7 @@ const App = () => {
         const walletConnected = await connect({
           autoSelect: previouslyConnectedWallets[0]
         })
-        console.log('connected wallets: ', walletConnected)
+        console.log('connected wallet: ', walletConnected)
       }
       setWalletFromLocalStorage()
     }
@@ -125,159 +94,193 @@ const App = () => {
     return true
   }
 
-  const sendHash = async () => {
-    if (!toAddress) {
-      alert('An Ethereum address to send Eth to is required.')
-      return
-    }
 
+  const signRequestId = async (requestId, id) => {
     const signer = provider.getUncheckedSigner()
-
-    await signer.sendTransaction({
-      to: toAddress,
-      value: 1000000000000000
-    })
+    let result = null;
+    try {
+      result = await signer.signMessage(ethers.utils.arrayify(requestId));
+    } catch (e) {
+      return null;
+    }
+    setLoadingActive(true);
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_SECURITY_URL}/v1/guardian/sign`,
+        {id, signedMessage: result},
+      )
+      await fetchRecoveryRequests();
+      setLoadingActive(false);
+    } catch (e) {
+      setLoadingActive(false);
+      showFetchingError("Error occurred while fetching signature");
+      return null;
+    }
+    return result;
   }
 
+  const showFetchingError = (errorMessage) => {
+    setRecoveryRequests([]);
+    setMinimumSignatures(0);
+    setFetchingRequests(false);
+    setOpenSnackBar(true);
+    setSnackBarMessage(errorMessage);
+  }
+
+  const fetchRecoveryRequests = async () => {
+    setRecoveryRequests([]);
+    setFetchingRequests(true);
+    const guardians = [];
+    let minimumSignatures = 0;
+    try { //
+      const lostWallet = await contracts.Wallet.getInstance(provider).attach(toAddress);
+      //
+      const guardiansCount = (await lostWallet.getGuardiansCount()).toNumber();
+      for (let i = 0; i < guardiansCount; i++) {
+        const guardianAddress = await lostWallet.getGuardian(i);
+        guardians.push(guardianAddress.toString().toLowerCase());
+      }
+      //
+      minimumSignatures = (await lostWallet.getMinGuardiansSignatures()).toNumber();
+      //
+    } catch (e) {
+      showFetchingError("No recovery requests found for this wallet");
+      return;
+    }
+    const signer = provider.getUncheckedSigner()
+    const signerAddress = (await signer.getAddress()).toLowerCase();
+    if (!guardians.includes(signerAddress)){
+      showFetchingError("You are not a guardian for this wallet");
+      return;
+    }
+    //
+    const response = await axios.get(
+      `${process.env.REACT_APP_SECURITY_URL}/v1/guardian/fetchByAddress`,
+        {params: {walletAddress: toAddress.toLowerCase(), network: "Goerli"}},
+    );
+    if (response.data.length === 0){
+      showFetchingError("No recovery requests found for this wallet");
+      return;
+    }
+    setMinimumSignatures(minimumSignatures);
+    setRecoveryRequests(response.data);
+    setFetchingRequests(false);
+  }
+
+  const onClickSign = async(requestId, id) => {
+    const ready = await readyToTransact();
+    if (!ready) return;
+    try {
+      const result = await signRequestId(requestId, id);
+      console.log(result);
+    } catch (e) {
+      setSnackBarMessage("User cancelled signing operation");
+      setOpenSnackBar(true);
+      return;
+    }
+  }
 
   if (!web3Onboard) return <div>Loading...</div>
 
   return (
-    <main>
-      <section className="main">
-        <div className="main-content">
-          <div className="vertical-main-container">
-            <h1 style={{ fontSize: '3.5rem' }}>Guardians Security</h1>
-            <div className="container onboard">
-              <img
-                className="logo"
-                src={logo}
-                alt="logo"
-              />
-              <h2>Recover a Wallet</h2>
-              <div className="account-center-actions">
-                <div>
-                  {!wallet && (
-                    <button
-                      className="bn-demo-button"
-                      onClick={async () => {
-                        const walletsConnected = await connect()
-                        console.log('connected wallets: ', walletsConnected)
-                      }}
-                    >
-                      Connect your Wallet
-                    </button>
-                  )}
-
-                  {wallet && (
-                    <>
-                      <input
-                        type="text"
-                        style={{
-                          padding: '0.5rem',
-                          border: 'none',
-                          borderRadius: '10px',
-                          marginLeft: '0.5rem',
-                          width: '18rem'
-                        }}
-                        value={toAddress}
-                        placeholder="address"
-                        onChange={e => setToAddress(e.target.value)}
-                      />
+    <LoadingOverlay
+      active={loadingActive}
+      spinner
+      text='Loading...'
+    >
+      <main>
+        <Snackbar
+          anchorOrigin={{vertical:'bottom', horizontal:'center'}}
+          open={openSnackBar}
+          onClose={() => setOpenSnackBar(false)}
+          autoHideDuration={4000}
+        >
+          <Alert severity="error" sx={{ width: '100%' }}>
+            {snackBarMessage}
+          </Alert>
+        </Snackbar>
+        <section className="main">
+          <div className="main-content">
+            <div className="vertical-main-container">
+              <div className="container onboard">
+                <div style={{height: '2rem'}}/>
+                <img
+                  className="logo"
+                  src={logo}
+                />
+                <div style={{height: '3rem'}}/>
+                <text style={{fontFamily: 'Gilroy', fontWeight: 'bold', color: '#1F2546', fontSize: '2rem'}}>Recover a lost wallet</text>
+                <div style={{height: '5rem'}}/>
+                {!wallet && (
+                  <div className="account-center-actions">
+                    <div style={{flexDirection: "column", alignItems: "center"}}>
+                      <text style={{fontFamily: 'Gilroy', color: '#1F2546', fontSize: '1.2rem', textAlign: 'center'}}>
+                        Let's first start by connecting<br/>your wallet (as a Guardian)
+                      </text>
+                      <div style={{height: '5px'}}/>
                       <button
-                        disabled={console.log('if not proper address')}
-                        className="bn-demo-button"
+                        className="default-button"
                         onClick={async () => {
-                          console.log('check if guardian is assigned to recover the address they put in the input')
+                          const walletsConnected = await connect()
+                          console.log('connected wallets: ', walletsConnected)
                         }}
                       >
-                        Initiate Recovery
+                        Connect your Wallet
                       </button>
-                    </>
-                  )}
-                </div>
-                <div>
-                </div>
+                    </div>
+                  </div>
+                )}
+                {wallet && <div className="account-center-actions">
+                  <div style={{flexDirection: "column", alignItems: "flex-start"}}>
+                    <text style={{fontFamily: 'Gilroy', color: '#1F2546', fontSize: '1.2rem'}}>
+                      Public address of lost wallet
+                    </text>
+                    <div style={{height: '5px'}}/>
+                    <input
+                      type="text"
+                      style={{
+                        padding: '0.5rem',
+                        border: 'none',
+                        borderRadius: '4px',
+                        width: '18rem'
+                      }}
+                      value={toAddress}
+                      placeholder="0x153ade556......"
+                      onChange={e => setToAddress(e.target.value)}
+                    />
+                    <div style={{height: '1rem'}}/>
+                    <LoadingButton
+                      disabled={!isValid(toAddress)}
+                      loading={fetchingRequests}
+                      variant="contained"
+                      style={{
+                        opacity: !isValid(toAddress) || fetchingRequests ? "0.5" : "1",
+                        background: "#1F2546",
+                        padding: "0.55rem 1.4rem",
+                        color: "#F8ECE1",
+                      }}
+                      onClick={fetchRecoveryRequests}
+                    >
+                      Next
+                    </LoadingButton>
+                  </div>
+                </div>}
               </div>
             </div>
-            <div className="container notify">
-              <h2>Transaction Notifications with Notify</h2>
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  marginBottom: '1rem'
-                }}
-              >
-                <div style={{ marginBottom: '1rem' }}>
-                  <label>Send 0.001 Goerli Eth to:</label>
-                  <input
-                    type="text"
-                    style={{
-                      padding: '0.5rem',
-                      border: 'none',
-                      borderRadius: '10px',
-                      marginLeft: '0.5rem',
-                      width: '18rem'
-                    }}
-                    value={toAddress}
-                    placeholder="address"
-                    onChange={e => setToAddress(e.target.value)}
-                  />
-                </div>
-                <div className={'send-transaction-container'}>
-                  <button
-                    className="bn-demo-button"
-                    onClick={async () => {
-                      const ready = await readyToTransact()
-                      if (!ready) return
-                      sendHash()
-                    }}
-                  >
-                    Send
-                  </button>
-                  with in-flight notifications
-                </div>
-              </div>
-              <div>
-                <button
-                  className="bn-demo-button"
-                  onClick={() => {
-                    const { update, dismiss } = customNotification({
-                      eventCode: 'dbUpdate',
-                      type: 'hint',
-                      message: 'Custom hint notification created by the dapp',
-                      onClick: () => window.open(`https://www.blocknative.com`)
-                    })
-                    // Update your notification example below
-                    // setTimeout(
-                    //   () =>
-                    //     update({
-                    //       eventCode: 'dbUpdateSuccess',
-                    //       message: 'Hint notification reason resolved!',
-                    //       type: 'success',
-                    //       autoDismiss: 5000
-                    //     }),
-                    //   4000
-                    // )
-                    setTimeout(
-                      () =>
-                        // use the dismiss method returned or add an autoDismiss prop to the notification
-                        dismiss(),
-                      4000
-                    )
-                  }}
-                >
-                  Custom Hint Notification
-                </button>
-              </div>
+            <div style={{marginLeft: "15px", marginTop: "15px", marginRight: "15px"}}>
+              <tbody style={{justifyContent: 'center', alignItems: 'center'}}>
+              {recoveryRequests.map((object, i) => <RecoveryRequestCard
+                request={object}
+                key={object.id}
+                minimumSignatures={minimumSignatures}
+                onClickSign={() => onClickSign(object.requestId, object.id)}
+              />)}
+              </tbody>
             </div>
           </div>
-        </div>
-      </section>
-      {/* <Footer /> */}
-    </main>
+        </section>
+      </main>
+    </LoadingOverlay>
   )
 }
 

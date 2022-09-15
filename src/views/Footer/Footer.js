@@ -60,14 +60,14 @@ const Footer = () => {
           target="_blank"
           rel="noopener noreferrer"
         >
-          <button className="bn-demo-button">Onboard Blog</button>
+          <button className="default-button">Onboard Blog</button>
         </a>
         <a
           href="https://docs.blocknative.com/onboard"
           target="_blank"
           rel="noopener noreferrer"
         >
-          <button className="bn-demo-button">View API Docs</button>
+          <button className="default-button">View API Docs</button>
         </a>
         <section className="terms-privacy">
           <a
