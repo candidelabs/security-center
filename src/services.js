@@ -53,10 +53,15 @@ export const initWeb3Onboard = init({
   },
   accountCenter: {
     desktop: {
-      position: 'bottomLeft',
+      position: 'topRight',
       enabled: true,
       minimal: false
-    }
+    },
+    mobile: {
+      position: 'bottomRight',
+      enabled: true,
+      minimal: true,
+    },
   },
   apiKey: dappId,
   notify: {

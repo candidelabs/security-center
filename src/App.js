@@ -10,13 +10,14 @@ import {
 } from '@web3-onboard/react'
 import logo from './icons/logov3.svg'
 import './App.css'
-import {isValid} from "./utils/address";
-import {RecoveryRequestCard} from "./components/RecoveryRequestCard";
+import { isValid } from "./utils/address";
+import { RecoveryRequestCard } from "./components/RecoveryRequestCard";
 import axios from "axios";
 import LoadingButton from "@mui/material/Button";
-import {Alert, Snackbar} from "@mui/material";
+import Grid2 from '@mui/material/Unstable_Grid2';
+import { Alert, Snackbar } from "@mui/material";
 import LoadingOverlay from 'react-loading-overlay';
-import {contracts} from "testing-wallet-helper-functions";
+import { contracts } from "testing-wallet-helper-functions";
 require('dotenv').config()
 
 if (window.innerWidth < 700) {
@@ -107,7 +108,7 @@ const App = () => {
     try {
       await axios.post(
         `${process.env.REACT_APP_SECURITY_URL}/v1/guardian/sign`,
-        {id, signedMessage: result},
+        { id, signedMessage: result },
       )
       await fetchRecoveryRequests();
       setLoadingActive(false);
@@ -149,16 +150,16 @@ const App = () => {
     }
     const signer = provider.getUncheckedSigner()
     const signerAddress = (await signer.getAddress()).toLowerCase();
-    if (!guardians.includes(signerAddress)){
+    if (!guardians.includes(signerAddress)) {
       showFetchingError("You are not a guardian for this wallet");
       return;
     }
     //
     const response = await axios.get(
       `${process.env.REACT_APP_SECURITY_URL}/v1/guardian/fetchByAddress`,
-        {params: {walletAddress: toAddress.toLowerCase(), network: "Goerli"}},
+      { params: { walletAddress: toAddress.toLowerCase(), network: "Goerli" } },
     );
-    if (response.data.length === 0){
+    if (response.data.length === 0) {
       showFetchingError("No recovery requests found for this wallet");
       return;
     }
@@ -167,7 +168,7 @@ const App = () => {
     setFetchingRequests(false);
   }
 
-  const onClickSign = async(requestId, id) => {
+  const onClickSign = async (requestId, id) => {
     const ready = await readyToTransact();
     if (!ready) return;
     try {
@@ -188,9 +189,9 @@ const App = () => {
       spinner
       text='Loading...'
     >
-      <main>
+      <Grid2 container spacing={2}>
         <Snackbar
-          anchorOrigin={{vertical:'bottom', horizontal:'center'}}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
           open={openSnackBar}
           onClose={() => setOpenSnackBar(false)}
           autoHideDuration={4000}
@@ -199,88 +200,86 @@ const App = () => {
             {snackBarMessage}
           </Alert>
         </Snackbar>
-        <section className="main">
-          <div className="main-content">
-            <div className="vertical-main-container">
-              <div className="container onboard">
-                <div style={{height: '2rem'}}/>
-                <img
-                  className="logo"
-                  src={logo}
+        <Grid2 xs={12} className="aside">
+          <Grid2 xs={12} display="flex" justifyContent="center" alignItems="center">
+            <img
+              className="logo"
+              src={logo}
+              alt="Candide Logo"
+              style={{ maxHeight: "80%" }}
+            />
+          </Grid2 >
+          <Grid2 display="flex" justifyContent="center" alignItems="center">
+            <text style={{ fontFamily: 'Gilroy', fontWeight: 'bold', color: '#1F2546', fontSize: '2rem' }}>Recover a lost wallet</text>
+          </Grid2>
+          <Grid2 display="flex" justifyContent="center" alignItems="center">
+            {!wallet && (
+              <Grid2>
+                <Grid2 display="flex" justifyContent="center" alignItems="center">
+                  <text style={{ fontFamily: 'Gilroy', color: '#1F2546', fontSize: '1.2rem', textAlign: 'center' }}>
+                    Let's first start by connecting your Guardian Wallet
+                  </text>
+                </Grid2>
+                <Grid2 display="flex" justifyContent="center" alignItems="center">
+                  <button
+                    className="default-button"
+                    onClick={async () => {
+                      const walletsConnected = await connect()
+                      console.log('connected wallets: ', walletsConnected)
+                    }}
+                  >
+                    Connect your Wallet
+                  </button>
+                </Grid2>
+              </Grid2>
+            )}
+            {wallet && <div className="account-center-actions">
+              <div style={{ flexDirection: "column", alignItems: "flex-start" }}>
+                <text style={{ fontFamily: 'Gilroy', color: '#1F2546', fontSize: '1.2rem' }}>
+                  Public address of lost wallet
+                </text>
+                <div style={{ height: '5px' }} />
+                <input
+                  type="text"
+                  style={{
+                    padding: '0.5rem',
+                    border: 'none',
+                    borderRadius: '4px',
+                    width: '18rem'
+                  }}
+                  value={toAddress}
+                  placeholder="0x153ade556......"
+                  onChange={e => setToAddress(e.target.value)}
                 />
-                <div style={{height: '3rem'}}/>
-                <text style={{fontFamily: 'Gilroy', fontWeight: 'bold', color: '#1F2546', fontSize: '2rem'}}>Recover a lost wallet</text>
-                <div style={{height: '5rem'}}/>
-                {!wallet && (
-                  <div className="account-center-actions">
-                    <div style={{flexDirection: "column", alignItems: "center"}}>
-                      <text style={{fontFamily: 'Gilroy', color: '#1F2546', fontSize: '1.2rem', textAlign: 'center'}}>
-                        Let's first start by connecting<br/>your wallet (as a Guardian)
-                      </text>
-                      <div style={{height: '5px'}}/>
-                      <button
-                        className="default-button"
-                        onClick={async () => {
-                          const walletsConnected = await connect()
-                          console.log('connected wallets: ', walletsConnected)
-                        }}
-                      >
-                        Connect your Wallet
-                      </button>
-                    </div>
-                  </div>
-                )}
-                {wallet && <div className="account-center-actions">
-                  <div style={{flexDirection: "column", alignItems: "flex-start"}}>
-                    <text style={{fontFamily: 'Gilroy', color: '#1F2546', fontSize: '1.2rem'}}>
-                      Public address of lost wallet
-                    </text>
-                    <div style={{height: '5px'}}/>
-                    <input
-                      type="text"
-                      style={{
-                        padding: '0.5rem',
-                        border: 'none',
-                        borderRadius: '4px',
-                        width: '18rem'
-                      }}
-                      value={toAddress}
-                      placeholder="0x153ade556......"
-                      onChange={e => setToAddress(e.target.value)}
-                    />
-                    <div style={{height: '1rem'}}/>
-                    <LoadingButton
-                      disabled={!isValid(toAddress)}
-                      loading={fetchingRequests}
-                      variant="contained"
-                      style={{
-                        opacity: !isValid(toAddress) || fetchingRequests ? "0.5" : "1",
-                        background: "#1F2546",
-                        padding: "0.55rem 1.4rem",
-                        color: "#F8ECE1",
-                      }}
-                      onClick={fetchRecoveryRequests}
-                    >
-                      Next
-                    </LoadingButton>
-                  </div>
-                </div>}
+                <div style={{ height: '1rem' }} />
+                <LoadingButton
+                  disabled={!isValid(toAddress)}
+                  loading={fetchingRequests}
+                  variant="contained"
+                  style={{
+                    opacity: !isValid(toAddress) || fetchingRequests ? "0.5" : "1",
+                    background: "#1F2546",
+                    padding: "0.55rem 1.4rem",
+                    color: "#F8ECE1",
+                  }}
+                  onClick={fetchRecoveryRequests}
+                >
+                  Next
+                </LoadingButton>
               </div>
-            </div>
-            <div style={{marginLeft: "15px", marginTop: "15px", marginRight: "15px"}}>
-              <tbody style={{justifyContent: 'center', alignItems: 'center'}}>
-              {recoveryRequests.map((object, i) => <RecoveryRequestCard
-                request={object}
-                key={object.id}
-                minimumSignatures={minimumSignatures}
-                onClickSign={() => onClickSign(object.requestId, object.id)}
-              />)}
-              </tbody>
-            </div>
-          </div>
-        </section>
-      </main>
-    </LoadingOverlay>
+            </div>}
+          </Grid2>
+          <Grid2>
+            {recoveryRequests.map((object, i) => <RecoveryRequestCard
+              request={object}
+              key={object.id}
+              minimumSignatures={minimumSignatures}
+              onClickSign={() => onClickSign(object.requestId, object.id)}
+            />)}
+          </Grid2>
+        </Grid2>
+      </Grid2>
+    </LoadingOverlay >
   )
 }
 

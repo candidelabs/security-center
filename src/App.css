@@ -8,41 +8,31 @@ body {
   overflow: hidden;
   margin: 0;
   padding: 0;
+  background: #F8ECE1;
 }
 
 main {
-  height: 100vh;
-  overflow: auto;
-  box-sizing: border-box;
   display: flex;
-  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  flex-wrap: wrap;
+  min-height: 100vh;
 }
 
 .main-content {
   display: flex;
-  justify-content: flex-start;
-  color: white;
+  position: relative;
+  overflow: hidden;
 }
 
 .vertical-main-container {
   display: grid;
 }
 
-.container {
+.aside {
   background: #F8ECE1;
   display: flex;
-  justify-content: start;
-  align-items: center;
   flex-flow: column nowrap;
-  padding: 1.5rem;
-  height: 100vh;
-}
-
-.container div {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-flow: row wrap;
 }
 
 select {
