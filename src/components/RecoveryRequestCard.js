@@ -41,7 +41,7 @@ export const RecoveryRequestCard = (props) => {
             startIcon={<FontAwesomeIcon icon={faSignature} />}
             onClick={props.onClickSign}
           >
-            Sign</Button>
+            {props.request.signaturesAcquired === props.minimumSignatures ? "Submit" : "Sign"}</Button>
         </CardActions>
       </Card>
     </div>

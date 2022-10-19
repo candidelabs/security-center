@@ -96,11 +96,11 @@ const App = () => {
   }
 
 
-  const signRequestId = async (requestId, id) => {
+  const signDataHash = async (dataHash, id) => {
     const signer = provider.getUncheckedSigner()
     let result = null;
     try {
-      result = await signer.signMessage(ethers.utils.arrayify(requestId));
+      result = await signer.signMessage(ethers.utils.arrayify(dataHash));
     } catch (e) {
       return null;
     }
@@ -114,7 +114,39 @@ const App = () => {
       setLoadingActive(false);
     } catch (e) {
       setLoadingActive(false);
-      showFetchingError("Error occurred while fetching signature");
+      showFetchingError("Error occurred while submitting signature");
+      return null;
+    }
+    return result;
+  }
+
+  const submitRecovery = async (id, socialRecoveryAddress, oldOwner, newOwner, signatures) => {
+    const signer = provider.getUncheckedSigner()
+    let result = null;
+    setLoadingActive(true);
+    try {
+      const lostWallet = await contracts.Wallet.getSocialModuleInstance(provider).attach(socialRecoveryAddress);
+      let callData = lostWallet.interface.encodeFunctionData("confirmAndRecoverAccess", [
+        "0x0000000000000000000000000000000000000001",
+        oldOwner,
+        newOwner,
+        signatures,
+      ]);
+      result = await signer.sendTransaction({
+        to: socialRecoveryAddress,
+        value: 0,
+        data: callData,
+        gasLimit: 168463*2,
+      });
+      await axios.post(
+        `${process.env.REACT_APP_SECURITY_URL}/v1/guardian/submit`,
+        { id, transactionHash: result.hash },
+      );
+      await fetchRecoveryRequests();
+      setLoadingActive(false);
+    } catch (e) {
+      setLoadingActive(false);
+      showFetchingError("Error occurred while submitting recovery request");
       return null;
     }
     return result;
@@ -131,18 +163,28 @@ const App = () => {
   const fetchRecoveryRequests = async () => {
     setRecoveryRequests([]);
     setFetchingRequests(true);
+    const response = await axios.get(
+      `${process.env.REACT_APP_SECURITY_URL}/v1/guardian/fetchByAddress`,
+      { params: { walletAddress: toAddress.toLowerCase(), network: "Goerli" } },
+    );
+    console.log(response.data);
+    if (response.data.length === 0) {
+      showFetchingError("No recovery requests found for this wallet");
+      return;
+    }
+    //
     const guardians = [];
     let minimumSignatures = 0;
     try { //
-      const lostWallet = await contracts.Wallet.getInstance(provider).attach(toAddress);
+      const lostWallet = await contracts.Wallet.getSocialModuleInstance(provider).attach(response.data[0].socialRecoveryAddress);
       //
-      const guardiansCount = (await lostWallet.getGuardiansCount()).toNumber();
+      const guardiansCount = (await lostWallet.friendsCount()).toNumber();
       for (let i = 0; i < guardiansCount; i++) {
-        const guardianAddress = await lostWallet.getGuardian(i);
+        const guardianAddress = await lostWallet.friends(i);
         guardians.push(guardianAddress.toString().toLowerCase());
       }
       //
-      minimumSignatures = (await lostWallet.getMinGuardiansSignatures()).toNumber();
+      minimumSignatures = (await lostWallet.threshold()).toNumber();
       //
     } catch (e) {
       showFetchingError("No recovery requests found for this wallet");
@@ -155,27 +197,31 @@ const App = () => {
       return;
     }
     //
-    const response = await axios.get(
-      `${process.env.REACT_APP_SECURITY_URL}/v1/guardian/fetchByAddress`,
-      { params: { walletAddress: toAddress.toLowerCase(), network: "Goerli" } },
-    );
-    if (response.data.length === 0) {
-      showFetchingError("No recovery requests found for this wallet");
-      return;
-    }
     setMinimumSignatures(minimumSignatures);
     setRecoveryRequests(response.data);
     setFetchingRequests(false);
   }
 
-  const onClickSign = async (requestId, id) => {
+  const onClickSign = async (dataHash, id) => {
     const ready = await readyToTransact();
     if (!ready) return;
     try {
-      const result = await signRequestId(requestId, id);
+      const result = await signDataHash(dataHash, id);
       console.log(result);
     } catch (e) {
       setSnackBarMessage("User cancelled signing operation");
+      setOpenSnackBar(true);
+      return;
+    }
+  }
+
+  const onClickSubmit = async (id, socialRecoveryAddress, oldOwner, newOwner, signatures) => {
+    const ready = await readyToTransact();
+    if (!ready) return;
+    try{
+      const result = await submitRecovery(id, socialRecoveryAddress, oldOwner, newOwner, signatures);
+    } catch (e){
+      setSnackBarMessage("User cancelled submit operation");
       setOpenSnackBar(true);
       return;
     }
@@ -274,7 +320,7 @@ const App = () => {
               request={object}
               key={object.id}
               minimumSignatures={minimumSignatures}
-              onClickSign={() => onClickSign(object.requestId, object.id)}
+              onClickSign={() => object.signaturesAcquired === minimumSignatures ? onClickSubmit(object.id, object.socialRecoveryAddress, object.oldOwner, object.newOwner, object.signatures) : onClickSign(object.dataHash, object.id)}
             />)}
           </Grid2>
         </Grid2>

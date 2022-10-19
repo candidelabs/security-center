@@ -15437,10 +15437,10 @@ test-exclude@^5.2.3:
     read-pkg-up "^4.0.0"
     require-main-filename "^2.0.0"
 
-testing-wallet-helper-functions@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/testing-wallet-helper-functions/-/testing-wallet-helper-functions-1.0.1.tgz#04f1efbe7b6c25147d73d279050bebc02ca78379"
-  integrity sha512-SRbPoOTwOlYdxzygbypQ7v7IEPjdhGXhJLS0FMle5UuCvh+rqha/FR3rQmk8CmAOpc6rF6PSJVR0gpwb3GVPGA==
+testing-wallet-helper-functions@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/testing-wallet-helper-functions/-/testing-wallet-helper-functions-1.0.2.tgz#2e036c4d25add0fa5a8048bce0ee6546c8581d1e"
+  integrity sha512-XSLICBG1qqi9TNlz8oieiqM6oqD689pkfguMoLlBqCiMZN8auq2oO4dZoTzDCAxZmt8Rs0PAzPbShsnmrMiEAg==
   dependencies:
     crypto-js "^4.1.1"
     ethers "^5.6.9"
