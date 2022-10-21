@@ -32,12 +32,12 @@ export const initWeb3Onboard = init({
     // sequence
   ],
   chains: [
-    {
-      id: '0xa',
-      token: 'ETH',
-      label: 'Optimism',
-      rpcUrl: `https://mainnet.optimism.io`,
-    },
+    // {
+    //   id: '0xa',
+    //   token: 'ETH',
+    //   label: 'Optimism',
+    //   rpcUrl: `https://mainnet.optimism.io`,
+    // },
     {
       id: '0x5',
       token: 'rETH',
