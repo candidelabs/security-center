@@ -17,7 +17,7 @@ import LoadingButton from "@mui/material/Button";
 import Grid2 from '@mui/material/Unstable_Grid2';
 import { Alert, Snackbar } from "@mui/material";
 import LoadingOverlay from 'react-loading-overlay';
-import { contracts } from "testing-wallet-helper-functions";
+import {getSocialModuleInstance} from "./utils/contractSource";
 require('dotenv').config()
 
 if (window.innerWidth < 700) {
@@ -125,7 +125,7 @@ const App = () => {
     let result = null;
     setLoadingActive(true);
     try {
-      const lostWallet = await contracts.Wallet.getSocialModuleInstance(provider).attach(socialRecoveryAddress);
+      const lostWallet = await getSocialModuleInstance(socialRecoveryAddress, provider);
       let callData = lostWallet.interface.encodeFunctionData("confirmAndRecoverAccess", [
         "0x0000000000000000000000000000000000000001",
         oldOwner,
@@ -173,16 +173,16 @@ const App = () => {
       return;
     }
     //
-    const guardians = [];
+    let guardians = [];
     let minimumSignatures = 0;
     try { //
-      const lostWallet = await contracts.Wallet.getSocialModuleInstance(provider).attach(response.data[0].socialRecoveryAddress);
+      const lostWallet = await getSocialModuleInstance(response.data[0].socialRecoveryAddress, provider);
       //
-      const guardiansCount = (await lostWallet.friendsCount()).toNumber();
-      for (let i = 0; i < guardiansCount; i++) {
-        const guardianAddress = await lostWallet.friends(i);
-        guardians.push(guardianAddress.toString().toLowerCase());
-      }
+      guardians = await lostWallet.getFriends();
+      guardians = guardians.map(element => {
+        return element.toLowerCase();
+      });
+      console.log(guardians);
       //
       minimumSignatures = (await lostWallet.threshold()).toNumber();
       //
@@ -192,7 +192,10 @@ const App = () => {
     }
     const signer = provider.getUncheckedSigner()
     const signerAddress = (await signer.getAddress()).toLowerCase();
-    if (!guardians.includes(signerAddress)) {
+    console.log(signerAddress.toLowerCase());
+    console.log(guardians[0]);
+    console.log(typeof guardians[0]);
+    if (!guardians.includes(signerAddress.toLowerCase())) {
       showFetchingError("You are not a guardian for this wallet");
       return;
     }
