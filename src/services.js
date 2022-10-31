@@ -15,7 +15,6 @@ const walletConnect = walletConnectModule()
 const magic = magicModule({
   // public API key
   apiKey: process.env.REACT_APP_MAGIC_LINK_PK,
-  userEmail: localStorage.getItem('magicUserEmail')
 })
 
 
