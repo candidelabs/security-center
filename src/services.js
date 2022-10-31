@@ -17,7 +17,7 @@ const coinbase = coinbaseModule()
 const walletConnect = walletConnectModule()
 const magic = magicModule({
   // public API key
-  apiKey: 'pk_live_EAEC435C96D797A8',
+  apiKey: 'pk_live_C958EEE2ACD0E2B6',
   userEmail: localStorage.getItem('magicUserEmail')
 })
 
@@ -25,31 +25,16 @@ const magic = magicModule({
 export const initWeb3Onboard = init({
   wallets: [
     injected,
-    // ledger,
     walletConnect,
     coinbase,
-    // trezor,
-    // web3auth,
-    // gnosis,
     magic,
-    // fortmatic,
-    // keepkey,
-    // portis,
-    // torus,
-    // sequence
   ],
   chains: [
-    // {
-    //   id: '0xa',
-    //   token: 'ETH',
-    //   label: 'Optimism',
-    //   rpcUrl: `https://mainnet.optimism.io`,
-    // },
     {
       id: '0x5',
       token: 'rETH',
       label: 'Gorli',
-      rpcUrl: `https://eth-goerli.public.blastapi.io`,
+      rpcUrl: `https://rpc.ankr.com/eth_goerli`,
     },
   ],
   appMetadata: {
@@ -78,10 +63,8 @@ export const initWeb3Onboard = init({
         return {
           // autoDismiss set to zero will persist the notification until the user excuses it
           autoDismiss: 0,
-          // message: `Your transaction is pending, click <a href="https://rinkeby.etherscan.io/tx/${transaction.hash}" rel="noopener noreferrer" target="_blank">here</a> for more info.`,
-          // or you could use onClick for when someone clicks on the notification itself
           onClick: () =>
-            window.open(`https://rinkeby.etherscan.io/tx/${transaction.hash}`)
+            window.open(`https://goerli.etherscan.io/tx/${transaction.hash}`)
         }
       }
     }
