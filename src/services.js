@@ -29,7 +29,7 @@ export const initWeb3Onboard = init({
   chains: [
     {
       id: '0x5',
-      token: 'rETH',
+      token: 'gETH',
       label: 'Gorli',
       rpcUrl: process.env.REACT_APP_GOERLI_RPC,
     },
