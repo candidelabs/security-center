@@ -1,6 +1,7 @@
 {
   "name": "onboard-notify-react",
   "version": "0.27.0",
+  "homepage": "./",
   "dependencies": {
     "@craco/craco": "^5.8.3",
     "@emotion/react": "^11.10.4",
