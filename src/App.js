@@ -223,6 +223,7 @@ const App = () => {
     if (!ready) return;
     try{
       const result = await submitRecovery(id, socialRecoveryAddress, oldOwner, newOwner, signatures);
+      console.log(result);
     } catch (e){
       setSnackBarMessage("User cancelled submit operation");
       setOpenSnackBar(true);
