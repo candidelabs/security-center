@@ -267,7 +267,12 @@ const App = () => {
               <Grid2>
                 <Grid2 display="flex" justifyContent="center" alignItems="center">
                   <text style={{ fontFamily: 'Gilroy', color: '#1F2546', fontSize: '1.2rem', textAlign: 'center' }}>
-                    Let's first start by connecting your Guardian Wallet
+                    Connect your Guardian Wallet*
+                  </text>
+                </Grid2>
+                <Grid2>
+                  <text style={{ fontFamily: 'Gilroy', color: '#1F2546', fontSize: '1rem', textAlign: 'center' }}>
+                    * If you have email recovery enabled, choose the <b>Magic Wallet</b> Option
                   </text>
                 </Grid2>
                 <Grid2 display="flex" justifyContent="center" alignItems="center">
