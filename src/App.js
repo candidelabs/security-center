@@ -14,8 +14,7 @@ import { isValid } from "./utils/address";
 import { RecoveryRequestCard } from "./components/RecoveryRequestCard";
 import axios from "axios";
 import LoadingButton from "@mui/material/Button";
-import Grid2 from '@mui/material/Unstable_Grid2';
-import { Alert, Snackbar } from "@mui/material";
+import { Alert, Snackbar, Stack } from "@mui/material";
 import LoadingOverlay from 'react-loading-overlay';
 import {getSocialModuleInstance} from "./utils/contractSource";
 require('dotenv').config()
@@ -239,7 +238,7 @@ const App = () => {
       spinner
       text='Loading...'
     >
-      <Grid2 container spacing={2}>
+      <Stack container spacing={2}>
         <Snackbar
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
           open={openSnackBar}
@@ -250,32 +249,32 @@ const App = () => {
             {snackBarMessage}
           </Alert>
         </Snackbar>
-        <Grid2 xs={12} className="aside">
-          <Grid2 xs={12} display="flex" justifyContent="center" alignItems="center">
+        <Stack xs={12} className="aside" spacing={2}>
+          <Stack xs={12} display="flex" justifyContent="center" alignItems="center">
             <img
               className="logo"
               src={logo}
               alt="Candide Logo"
               style={{ maxHeight: "80%" }}
             />
-          </Grid2 >
-          <Grid2 display="flex" justifyContent="center" alignItems="center">
+          </Stack >
+          <Stack display="flex" justifyContent="center" alignItems="center">
             <text style={{ fontFamily: 'Gilroy', fontWeight: 'bold', color: '#1F2546', fontSize: '2rem' }}>Recover a lost wallet</text>
-          </Grid2>
-          <Grid2 display="flex" justifyContent="center" alignItems="center">
+          </Stack>
+          <Stack display="flex" justifyContent="center" alignItems="center">
             {!wallet && (
-              <Grid2>
-                <Grid2 display="flex" justifyContent="center" alignItems="center">
+              <Stack spacing={2}>
+                <Stack display="flex" justifyContent="center" alignItems="center">
                   <text style={{ fontFamily: 'Gilroy', color: '#1F2546', fontSize: '1.2rem', textAlign: 'center' }}>
                     Connect your Guardian Wallet*
                   </text>
-                </Grid2>
-                <Grid2>
+                </Stack>
+                <Stack>
                   <text style={{ fontFamily: 'Gilroy', color: '#1F2546', fontSize: '1rem', textAlign: 'center' }}>
                     * If you have email recovery enabled, choose the <b>Magic Wallet</b> Option
                   </text>
-                </Grid2>
-                <Grid2 display="flex" justifyContent="center" alignItems="center">
+                </Stack>
+                <Stack display="flex" justifyContent="center" alignItems="center">
                   <button
                     className="default-button"
                     onClick={async () => {
@@ -285,8 +284,8 @@ const App = () => {
                   >
                     Connect your Wallet
                   </button>
-                </Grid2>
-              </Grid2>
+                </Stack>
+              </Stack>
             )}
             {wallet && <div className="account-center-actions">
               <div style={{ flexDirection: "column", alignItems: "flex-start" }}>
@@ -323,17 +322,17 @@ const App = () => {
                 </LoadingButton>
               </div>
             </div>}
-          </Grid2>
-          <Grid2>
+          </Stack>
+          <Stack>
             {recoveryRequests.map((object, i) => <RecoveryRequestCard
               request={object}
               key={object.id}
               minimumSignatures={minimumSignatures}
               onClickSign={() => object.signaturesAcquired === minimumSignatures ? onClickSubmit(object.id, object.socialRecoveryAddress, object.oldOwner, object.newOwner, object.signatures) : onClickSign(object.dataHash, object.id)}
             />)}
-          </Grid2>
-        </Grid2>
-      </Grid2>
+          </Stack>
+        </Stack>
+      </Stack>
     </LoadingOverlay >
   )
 }
