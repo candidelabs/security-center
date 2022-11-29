@@ -121,6 +121,12 @@ const App = () => {
 
   const submitRecovery = async (id, socialRecoveryAddress, oldOwner, newOwner, signatures) => {
     const signer = provider.getUncheckedSigner()
+    let transaction = {
+      to: socialRecoveryAddress,
+      value: 0,
+      gasLimit: 168463*2,
+    };
+    const estimatedCost = (await signer.getGasPrice()).mul(transaction.gasLimit)
     let result = null;
     setLoadingActive(true);
     try {
@@ -131,12 +137,8 @@ const App = () => {
         newOwner,
         signatures,
       ]);
-      result = await signer.sendTransaction({
-        to: socialRecoveryAddress,
-        value: 0,
-        data: callData,
-        gasLimit: 168463*2,
-      });
+      transaction.data = callData;
+      result = await signer.sendTransaction(transaction);
       await axios.post(
         `${process.env.REACT_APP_SECURITY_URL}/v1/guardian/submit`,
         { id, transactionHash: result.hash },
@@ -145,7 +147,13 @@ const App = () => {
       setLoadingActive(false);
     } catch (e) {
       setLoadingActive(false);
-      showFetchingError("Error occurred while submitting recovery request");
+      if(e.code === "INSUFFICIENT_FUNDS") {
+        setSnackBarMessage(`Connected wallet does not have enough funds for recovery tx. Required balance: ${ethers.utils.formatEther(estimatedCost)} Ether`);
+        setOpenSnackBar(true);
+      }
+      else{
+        showFetchingError("Error occurred while submitting recovery request");
+      }
       return null;
     }
     return result;
