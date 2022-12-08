@@ -121,9 +121,16 @@ export const RecoveryRequestCard = props => {
       await fetchRecoveryRequests()
       setLoadingActive(false)
     } catch (e) {
-      if (e.code === 'INSUFFICIENT_FUNDS') setInsufficientBalance(true)
+      if (e.code === 'INSUFFICIENT_FUNDS') {
+        setInsufficientBalance(true)
+        const estimatedCost = (await signer.getGasPrice()).mul(transaction.gasLimit)
+        setSnackBarMessage(`Insufficient balance to cover networks fees. Required: ${ethers.utils.formatEther(estimatedCost)} ETH`);
+        setOpenSnackBar(true);
+      }
+      else {
+        showFetchingError('Error occurred while submitting recovery request')
+      }
       setLoadingActive(false)
-      showFetchingError('Error occurred while submitting recovery request')
       return null
     }
     return result
