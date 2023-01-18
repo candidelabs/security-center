@@ -6,16 +6,29 @@
 
 ## Getting started
 
-Install the dependencies:
+### Install the dependencies:
 
 ```bash
 yarn
 ```
 
-Start the development server:
+### Make a copy of .env.example
+```bash
+cp -a .env.example .env
+```
+### Add you own env values:
+
+`REACT_APP_SECURITY_URL`: URL to a locally hosted [security-gateawy](https://github.com/candidelabs/security-gateway)
+
+`REACT_APP_GOERLI_RPC`: Get one from [Ankr](https://www.ankr.com/rpc) or Alchemy
+
+`REACT_APP_MAGIC_LINK_PK`: Get one from [Magic Link](https://magic.link). Use the same one you are using on [candide-mobile-app](https://github.com/candidelabs/candide-mobile-app)
+
+
+### Start the development server:
 
 ```bash
-yarn start
+yarn start-dev
 ```
 
 The project will be running on [localhost:3000](http://localhost:3000)
