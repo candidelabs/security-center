@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Stack } from '@mui/material'
 import axios from 'axios'
 import { RecoveryRequestCard } from './RecoveryRequestCard'
 import { getSocialModuleInstance } from '../utils/contractSource'
-import { useConnectWallet } from '@web3-onboard/react'
+import { useConnectWallet, useSetChain } from '@web3-onboard/react'
 import { ethers } from 'ethers'
-
-let provider
+import { NetworksConfig } from '../utils/network'
+import FinilizeCard from './FinilizeCard'
 
 export const DBRecoveryList = props => {
   const {
@@ -16,85 +16,146 @@ export const DBRecoveryList = props => {
     setOpenSnackBar,
     readyToTransact
   } = props
-  const [, setFetchingRequests] = useState(false)
+  const [{ connectedChain }, _setChain] = useSetChain()
   const [recoveryRequests, setRecoveryRequests] = useState([])
-  const [minimumSignatures, setMinimumSignatures] = useState(0)
+  const [minimumSignatures, setMinimumSignatures] = useState(0);
+  const [signerAddress, setSignerAddress] = useState('');
+  const [moduleAddressOnConnectedNetwork, setModuleAddressOnConnectedNetwork] = useState('');
+  const [isNetworkSupported, setIsNetworkSupported] = useState(false);
+  const [recoveryModuleContractInstance, setRecoveryModuleContractInstance] = useState();
+  const [signer, setSigner] = useState();
+  const [guardianAddresses, setGuardianAddresses] = useState([]);
 
-  const [{ wallet }] = useConnectWallet()
+  const [{ wallet }] = useConnectWallet();
 
   useEffect(() => {
-    if (!wallet?.provider) {
-      provider = null
-    } else {
-      provider = new ethers.providers.Web3Provider(wallet.provider, 'any')
+    if (wallet && wallet.provider) {
+      const newSigner = new ethers.providers.Web3Provider(wallet.provider, 'any');
+      setSigner(newSigner);
     }
-  }, [wallet])
 
-  const showFetchingError = errorMessage => {
-    setFetchingRequests(false)
+    if (wallet && wallet.accounts) {
+      setSignerAddress(wallet.accounts[0].address || '')
+    }
+  }, [wallet]);
+
+  const showFetchingError = useCallback((errorMessage) => {
     setOpenSnackBar(true)
     setSnackBarMessage(errorMessage)
-  }
+  }, [setOpenSnackBar, setSnackBarMessage]);
 
-  const fetchRecoveryRequests = async () => {
+  const fetchRecoveryRequests = async (walletAddress) => {
     setRecoveryRequests([])
-    setFetchingRequests(true)
-    const response = await axios.get(
-      `${process.env.REACT_APP_SECURITY_URL}/v1/guardian/fetchByAddress`,
-      { params: { walletAddress: toAddress.toLowerCase(), network: 'Goerli' } }
-    )
-    console.log(response.data)
-    if (response.data.length === 0) {
-      showFetchingError(`No recovery requests found for ${toAddress}`)
-      return
+
+    if (isNetworkSupported && recoveryModuleContractInstance) {
+      const nonce = await recoveryModuleContractInstance.nonce(walletAddress)
+
+      const response = await axios.get(
+        `${process.env.REACT_APP_SECURITY_URL}/v1/guardian/fetchByAddress`, {
+        params: {
+          walletAddress: walletAddress.toLowerCase(),
+          network: NetworksConfig[Number(connectedChain.id)].name,
+          nonce: Number(nonce),
+        }
+      });
+
+      if (response.data.length === 0) {
+        setSnackBarMessage(`No new recovery requests found for ${walletAddress}`);
+        setOpenSnackBar(true);
+        return
+      }
+
+      let guardians = []
+      let minSig = 0
+      if (signer == null) return // not ready to interact with chain
+      try {
+        guardians = await recoveryModuleContractInstance.getGuardians(walletAddress);
+        guardians = guardians.map(element => {
+          return element.toLowerCase()
+        })
+        //
+        minSig = (await recoveryModuleContractInstance.threshold(walletAddress)).toNumber()
+
+        setGuardianAddresses(guardians);
+        setMinimumSignatures(minSig)
+      } catch (e) {
+        console.error(e)
+        showFetchingError('Unable to check request status')
+        return
+      }
+
+      // filter recovery requests with old nonces
+      const filteredExpiredRecoveryRequests = response.data.filter((i) => i.nonce !== nonce);
+
+      if (guardians.includes(signerAddress)) {
+        if (filteredExpiredRecoveryRequests) {
+          setRecoveryRequests(filteredExpiredRecoveryRequests);
+        } else {
+          showFetchingError(`Previous recovery requests expired for ${walletAddress}`)
+        }
+      } else {
+        // check if minSign has been collected and transaction is ready to be executed or finilized
+        const recoveryRequestsReadyToBeSubmited = filteredExpiredRecoveryRequests.filter((i) => i.signaturesAcquired >= minSig);
+
+        if (recoveryRequestsReadyToBeSubmited && recoveryRequestsReadyToBeSubmited.length > 0) {
+          setRecoveryRequests(recoveryRequestsReadyToBeSubmited);
+        } else {
+          showFetchingError('You are not a guardian for this wallet')
+        }
+      }
     }
-    //
-    let guardians = []
-    let minimumSignatures = 0
-    if (provider == null) return // not ready to interact with chain
-    try {
-      const lostWallet = await getSocialModuleInstance(
-        response.data[0].socialRecoveryAddress,
-        provider
-      )
-      guardians = await lostWallet.getFriends()
-      guardians = guardians.map(element => {
-        return element.toLowerCase()
-      })
-      console.log(guardians)
-      //
-      minimumSignatures = (await lostWallet.threshold()).toNumber()
-      //
-    } catch (e) {
-      console.error(e)
-      showFetchingError('Unable to check request status')
-      return
-    }
-    const signer = provider.getUncheckedSigner()
-    const signerAddress = (await signer.getAddress()).toLowerCase()
-    console.log(signerAddress.toLowerCase())
-    console.log(guardians[0])
-    console.log(typeof guardians[0])
-    if (!guardians.includes(signerAddress.toLowerCase())) {
-      showFetchingError('You are not a guardian for this wallet')
-      return
-    }
-    //
-    setMinimumSignatures(minimumSignatures)
-    setRecoveryRequests(response.data)
-    setFetchingRequests(false)
-  }
+  };
 
   useEffect(() => {
-    fetchRecoveryRequests()
-  }, [toAddress])
+    if (recoveryModuleContractInstance && isNetworkSupported) {
+      fetchRecoveryRequests(toAddress);
+    }
+  }, [recoveryModuleContractInstance, toAddress, isNetworkSupported, signerAddress]);
+
+  useEffect(() => {
+    if (connectedChain && connectedChain.id) {
+      const ischainSupported = NetworksConfig.hasOwnProperty(Number(connectedChain.id));
+
+      setIsNetworkSupported(ischainSupported);
+      if (ischainSupported) {
+        const { socialRecoveryModuleAddress } = NetworksConfig[Number(connectedChain.id)];
+
+        setModuleAddressOnConnectedNetwork(socialRecoveryModuleAddress);
+        getRecoveryModuleContractInstance(socialRecoveryModuleAddress);
+      } else {
+        showFetchingError(`Unsupported Network. Change to ${NetworksConfig[10].name} or Goerli networks`);
+      }
+    }
+  }, [connectedChain, connectedChain.id, signer, showFetchingError]);
+
+  const getRecoveryModuleContractInstance = async (socialRecoveryModuleAddress) => {
+    if (signer) {
+      const unCheckedsigner = signer.getUncheckedSigner();
+      const result = await getSocialModuleInstance(
+        socialRecoveryModuleAddress,
+        unCheckedsigner,
+      );
+
+      setRecoveryModuleContractInstance(result);
+    }
+  };
 
   return (
     <Stack>
+      <FinilizeCard
+        lostAccountContractInstance={recoveryModuleContractInstance}
+        lostAccountAddress={toAddress}
+        setLoadingActive={setLoadingActive}
+        setSnackBarMessage={setSnackBarMessage}
+        setOpenSnackBar={setOpenSnackBar}
+        readyToTransact={readyToTransact}
+        showFetchingError={showFetchingError} />
       {recoveryRequests.map((object, i) => (
         <RecoveryRequestCard
+          guardians={guardianAddresses}
           request={object}
           key={object.id}
+          socialRecoveryAddress={moduleAddressOnConnectedNetwork}
           minimumSignatures={minimumSignatures}
           showFetchingError={showFetchingError}
           fetchRecoveryRequests={fetchRecoveryRequests}
