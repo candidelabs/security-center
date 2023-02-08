@@ -6,8 +6,6 @@ import magicModule from '@web3-onboard/magic'
 import walletConnectModule from '@web3-onboard/walletconnect'
 import coinbaseModule from '@web3-onboard/coinbase'
 
-const dappId = '1730eff0-9d50-4382-a3fe-89f0d34a2070'
-
 const injected = injectedModule()
 const coinbase = coinbaseModule()
 const walletConnect = walletConnectModule()
@@ -44,7 +42,7 @@ export const initWeb3Onboard = init({
       minimal: true
     }
   },
-  apiKey: dappId,
+  apiKey: process.env.REACT_BLOCKNATIVE_KEY,
   notify: {
     transactionHandler: transaction => {
       console.log({ transaction })
