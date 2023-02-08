@@ -21,11 +21,11 @@ if (window.innerWidth < 700) {
 
 const App = () => {
   const [{ wallet }, connect] = useConnectWallet()
-  const [{ chains, connectedChain, settingChain }, setChain] = useSetChain()
-  const [notifications, customNotification] = useNotifications()
+  const [{ connectedChain }, setChain] = useSetChain()
+  const [notifications, _customNotification, updateNotify] = useNotifications()
   const connectedWallets = useWallets()
   const [web3Onboard, setWeb3Onboard] = useState(null)
-  const [toAddress, setToAddress] = useState('')
+  const [recoverAccountAddress, setRecoverAccountAddress] = useState('')
   const [loadingActive, setLoadingActive] = useState(false)
   const [openSnackBar, setOpenSnackBar] = useState(false)
   const [snackBarMessage, setSnackBarMessage] = useState('')
@@ -37,13 +37,17 @@ const App = () => {
       searchParams.has('lostAddress') &&
       isValid(searchParams.get('lostAddress'))
     ) {
-      setToAddress(searchParams.get('lostAddress'))
+      setRecoverAccountAddress(searchParams.get('lostAddress'))
     }
   }, [])
 
   useEffect(() => {
     console.log(notifications)
   }, [notifications])
+
+  useEffect(() => {
+    updateNotify({ position: 'bottomLeft' })
+  }, [updateNotify]);
 
   useEffect(() => {
     if (!connectedWallets.length) return
@@ -95,7 +99,7 @@ const App = () => {
           onClose={() => setOpenSnackBar(false)}
           autoHideDuration={4000}
         >
-          <Alert severity="error" sx={{ width: '100%' }}>
+          <Alert severity="info" sx={{ width: '100%' }}>
             {snackBarMessage}
           </Alert>
         </Snackbar>
@@ -122,7 +126,7 @@ const App = () => {
                 fontSize: '2rem'
               }}
             >
-              Recover a lost wallet
+              Recover a lost account
             </div>
           </Stack>
           <Stack display="flex" justifyContent="center" alignItems="center">
@@ -189,7 +193,7 @@ const App = () => {
                       fontSize: '1.2rem'
                     }}
                   >
-                    Public address of lost wallet
+                    Public address of lost account
                   </div>
                   <div style={{ height: '5px' }} />
                   <input
@@ -200,17 +204,17 @@ const App = () => {
                       borderRadius: '4px',
                       width: '18rem'
                     }}
-                    value={toAddress}
+                    value={recoverAccountAddress}
                     placeholder="0x153ade556......"
-                    onChange={e => setToAddress(e.target.value)}
+                    onChange={e => setRecoverAccountAddress(e.target.value)}
                   />
                 </div>
               </div>
             )}
           </Stack>
-          {isValid(toAddress) && wallet && (
+          {isValid(recoverAccountAddress) && wallet && (
             <DBRecoveryList
-              toAddress={toAddress}
+              toAddress={recoverAccountAddress}
               setLoadingActive={setLoadingActive}
               setSnackBarMessage={setSnackBarMessage}
               setOpenSnackBar={setOpenSnackBar}
