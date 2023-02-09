@@ -35,7 +35,7 @@ export const DBRecoveryList = props => {
     }
 
     if (wallet && wallet.accounts) {
-      setSignerAddress(wallet.accounts[0].address || '')
+      setSignerAddress(wallet.accounts[0].address.toLowerCase() || '');
     }
   }, [wallet]);
 

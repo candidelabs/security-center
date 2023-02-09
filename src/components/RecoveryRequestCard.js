@@ -42,7 +42,7 @@ export const RecoveryRequestCard = props => {
   const [insufficientBalance, setInsufficientBalance] = useState(false)
   const [executeTransaction, setExecuteTransaction] = useState(true);
 
-  const signerAddress = wallet.accounts[0].address;
+  const signerAddress = wallet.accounts[0].address.toLowerCase();
 
   useEffect(() => {
     if (wallet) {
