@@ -12,7 +12,7 @@ import {
 import axios from 'axios'
 import { useConnectWallet, useNotifications, useSetChain } from '@web3-onboard/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSignature, faBolt, faBan, faCheck } from '@fortawesome/free-solid-svg-icons'
+import { faSignature, faBolt, faBan, faCheck, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 import { ethers } from 'ethers'
 import { getSocialModuleInstance } from '../utils/contractSource'
 import { NetworksConfig } from '../utils/network'
@@ -462,7 +462,7 @@ export const RecoveryRequestCard = props => {
         </Typography>
         {guardians.includes(signerAddress) && (!didSign && (request.signaturesAcquired + 1 >= minimumSignatures))
           ? (
-            <FormGroup>
+            <FormGroup row>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -477,6 +477,12 @@ export const RecoveryRequestCard = props => {
                 }
                 label="Execute Transaction"
                 sx={{ color: "white" }} />
+              <FontAwesomeIcon
+                icon={faCircleInfo}
+                color="white"
+                size="lg"
+                title="If you want to sign the recovery now but manually execute it later, uncheck this box"
+              />
             </FormGroup>
           )
           : null}
