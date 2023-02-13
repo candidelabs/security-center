@@ -66,7 +66,7 @@ export const RecoveryRequestCard = props => {
       signer,
     );
 
-    const lostAccountAddress = request.walletAddress;
+    const lostAccountAddress = request.accountAddress;
     const nonce = await lostAccount.nonce(lostAccountAddress)
     const name = await lostAccount.NAME();
     const version = await lostAccount.VERSION();
@@ -86,7 +86,7 @@ export const RecoveryRequestCard = props => {
       ],
     };
     const message = {
-      wallet: request.walletAddress,
+      wallet: request.accountAddress,
       newOwners: [request.newOwner],
       newThreshold: "1",
       nonce, // current nonce (nonce is obtained from the module not from the wallet),
@@ -132,7 +132,7 @@ export const RecoveryRequestCard = props => {
 
   const submitRecovery = async (
     id,
-    walletAddress,
+    accountAddress,
     newOwner,
     signatures
   ) => {
@@ -155,7 +155,7 @@ export const RecoveryRequestCard = props => {
       let callData = lostWallet.interface.encodeFunctionData(
         'multiConfirmRecovery',
         [
-          walletAddress, // account address to be recovered
+          accountAddress, // account address to be recovered
           [newOwner], // new owner of account
           1, // new threshold for gnosis safe account
           signatures, // signatures aquired by guardians
@@ -193,7 +193,7 @@ export const RecoveryRequestCard = props => {
       )
 
       setTimeout(
-        async () => await fetchRecoveryRequests(walletAddress, socialRecoveryAddress),
+        async () => await fetchRecoveryRequests(accountAddress, socialRecoveryAddress),
         6000,
       );
 
@@ -223,7 +223,7 @@ export const RecoveryRequestCard = props => {
     try {
       await submitRecovery(
         request.id,
-        request.walletAddress,
+        request.accountAddress,
         request.newOwner,
         request.signatures
       )
@@ -235,7 +235,7 @@ export const RecoveryRequestCard = props => {
 
   const signAndSubmit = async (
     id,
-    walletAddress,
+    accountAddress,
     newOwner,
     signatures
   ) => {
@@ -264,7 +264,7 @@ export const RecoveryRequestCard = props => {
       let callData = lostWallet.interface.encodeFunctionData(
         'multiConfirmRecovery',
         [
-          walletAddress, // account address to be recovered
+          accountAddress, // account address to be recovered
           [newOwner], // new owner of account
           1, // new threshold for gnosis safe account
           newSignatures, // signatures aquired by guardians,
@@ -303,7 +303,7 @@ export const RecoveryRequestCard = props => {
         )
 
         setTimeout(
-          async () => await fetchRecoveryRequests(walletAddress, socialRecoveryAddress),
+          async () => await fetchRecoveryRequests(accountAddress, socialRecoveryAddress),
           6000,
         );
       } else {
@@ -343,7 +343,7 @@ export const RecoveryRequestCard = props => {
     try {
       await signAndSubmit(
         request.id,
-        request.walletAddress,
+        request.accountAddress,
         request.newOwner,
         request.signatures
       )
@@ -446,7 +446,7 @@ export const RecoveryRequestCard = props => {
           Created {dateFormat.format(Date.parse(request.createdAt))}
         </Typography>
         <Typography variant="h6" noWrap color="white">
-          {request.walletAddress}
+          {request.accountAddress}
         </Typography>
         <Typography sx={{ mb: 1.5, fontFamily: 'Gilroy' }} color="white">
           Collected {request.signaturesAcquired ?? '0'} out of{' '}

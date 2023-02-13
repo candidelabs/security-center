@@ -44,23 +44,23 @@ export const DBRecoveryList = props => {
     setSnackBarMessage(errorMessage)
   }, [setOpenSnackBar, setSnackBarMessage]);
 
-  const fetchRecoveryRequests = async (walletAddress) => {
+  const fetchRecoveryRequests = async (accountAddress) => {
     setRecoveryRequests([])
 
     if (isNetworkSupported && recoveryModuleContractInstance) {
-      const nonce = await recoveryModuleContractInstance.nonce(walletAddress)
+      const nonce = await recoveryModuleContractInstance.nonce(accountAddress)
 
       const response = await axios.get(
         `${process.env.REACT_APP_SECURITY_URL}/v1/guardian/fetchByAddress`, {
         params: {
-          walletAddress: walletAddress.toLowerCase(),
+          accountAddress: accountAddress.toLowerCase(),
           network: NetworksConfig[Number(connectedChain.id)].name,
           nonce: Number(nonce),
         }
       });
 
       if (response.data.length === 0) {
-        setSnackBarMessage(`No new recovery requests found for ${walletAddress}`);
+        setSnackBarMessage(`No new recovery requests found for ${accountAddress}`);
         setOpenSnackBar(true);
         return
       }
@@ -69,12 +69,12 @@ export const DBRecoveryList = props => {
       let minSig = 0
       if (signer == null) return // not ready to interact with chain
       try {
-        guardians = await recoveryModuleContractInstance.getGuardians(walletAddress);
+        guardians = await recoveryModuleContractInstance.getGuardians(accountAddress);
         guardians = guardians.map(element => {
           return element.toLowerCase()
         })
         //
-        minSig = (await recoveryModuleContractInstance.threshold(walletAddress)).toNumber()
+        minSig = (await recoveryModuleContractInstance.threshold(accountAddress)).toNumber()
 
         setGuardianAddresses(guardians);
         setMinimumSignatures(minSig)
@@ -91,7 +91,7 @@ export const DBRecoveryList = props => {
         if (filteredExpiredRecoveryRequests) {
           setRecoveryRequests(filteredExpiredRecoveryRequests);
         } else {
-          showFetchingError(`Previous recovery requests expired for ${walletAddress}`)
+          showFetchingError(`Previous recovery requests expired for ${accountAddress}`)
         }
       } else {
         // check if minSign has been collected and transaction is ready to be executed or finilized
