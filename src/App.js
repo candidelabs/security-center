@@ -11,6 +11,7 @@ import logo from './icons/logov3.svg'
 import './App.css'
 import { isValid } from './utils/address'
 import { DBRecoveryList } from './components/DBRecoveryList'
+import { NetworksConfig } from './utils/network'
 import { Alert, Snackbar, Stack } from '@mui/material'
 import LoadingOverlay from 'react-loading-overlay'
 require('dotenv').config()
@@ -82,10 +83,17 @@ const App = () => {
       const walletSelected = await connect()
       if (!walletSelected) return false
     }
-    // prompt user to switch to Gorli for test
-    // TODO: switch to chain of wallet being recovered
-    if (connectedChain.id !== '0x5') await setChain({ chainId: '0x5' })
-    return true
+    // prompt user to switch to supported networks
+    if (connectedChain && connectedChain.id) {
+      const ischainSupported = NetworksConfig.hasOwnProperty(Number(connectedChain.id));
+
+      if (!ischainSupported) {
+        setSnackBarMessage(`Unsupported Network. Change to ${NetworksConfig[10].name} or to Goerli test network`)
+        setOpenSnackBar(true)
+      } else {
+        return true;
+      }
+    }
   }
 
   if (!web3Onboard) return <div>Loading...</div>
@@ -145,7 +153,7 @@ const App = () => {
                       textAlign: 'center'
                     }}
                   >
-                    Connect your Guardian Wallet*
+                    Connect your Recovery Contact Wallet*
                   </div>
                 </Stack>
                 <Stack>
