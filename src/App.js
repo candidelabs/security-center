@@ -88,7 +88,7 @@ const App = () => {
       const ischainSupported = NetworksConfig.hasOwnProperty(Number(connectedChain.id));
 
       if (!ischainSupported) {
-        setSnackBarMessage(`Unsupported Network. Change to ${NetworksConfig[10].name} or to Goerli test network`)
+        setSnackBarMessage(`Unsupported Network. Change to one of the supported networks`)
         setOpenSnackBar(true)
       } else {
         return true;
