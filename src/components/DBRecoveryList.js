@@ -48,60 +48,65 @@ export const DBRecoveryList = props => {
     setRecoveryRequests([])
 
     if (isNetworkSupported && recoveryModuleContractInstance) {
-      const nonce = await recoveryModuleContractInstance.nonce(accountAddress)
 
-      const response = await axios.get(
-        `${process.env.REACT_APP_SECURITY_URL}/v1/guardian/fetchByAddress`, {
-        params: {
-          accountAddress: accountAddress.toLowerCase(),
-          network: NetworksConfig[Number(connectedChain.id)].name,
-          nonce: Number(nonce),
-        }
-      });
-
-      if (response.data.length === 0) {
-        setSnackBarMessage(`No new recovery requests found for ${accountAddress}`);
-        setOpenSnackBar(true);
-        return
-      }
-
-      let guardians = []
-      let minSig = 0
-      if (signer == null) return // not ready to interact with chain
       try {
-        guardians = await recoveryModuleContractInstance.getGuardians(accountAddress);
-        guardians = guardians.map(element => {
-          return element.toLowerCase()
-        })
-        //
-        minSig = (await recoveryModuleContractInstance.threshold(accountAddress)).toNumber()
+        const nonce = await recoveryModuleContractInstance.nonce(accountAddress);
 
-        setGuardianAddresses(guardians);
-        setMinimumSignatures(minSig)
+        const response = await axios.get(
+          `${process.env.REACT_APP_SECURITY_URL}/v1/guardian/fetchByAddress`, {
+          params: {
+            accountAddress: accountAddress.toLowerCase(),
+            network: NetworksConfig[Number(connectedChain.id)].name,
+            nonce: Number(nonce),
+          }
+        });
+
+        if (response.data.length === 0) {
+          setSnackBarMessage(`No new recovery requests found for ${accountAddress}`);
+          setOpenSnackBar(true);
+          return
+        }
+
+        let guardians = []
+        let minSig = 0
+        if (signer == null) return // not ready to interact with chain
+        try {
+          guardians = await recoveryModuleContractInstance.getGuardians(accountAddress);
+          guardians = guardians.map(element => {
+            return element.toLowerCase()
+          })
+          //
+          minSig = (await recoveryModuleContractInstance.threshold(accountAddress)).toNumber()
+
+          setGuardianAddresses(guardians);
+          setMinimumSignatures(minSig)
+        } catch (e) {
+          console.error(e)
+          showFetchingError('Unable to check request status')
+          return
+        }
+
+        // filter recovery requests with old nonces
+        const filteredExpiredRecoveryRequests = response.data.filter((i) => i.nonce !== nonce);
+
+        if (guardians.includes(signerAddress)) {
+          if (filteredExpiredRecoveryRequests) {
+            setRecoveryRequests(filteredExpiredRecoveryRequests);
+          } else {
+            showFetchingError(`Previous recovery requests expired for ${accountAddress}`)
+          }
+        } else {
+          // check if minSign has been collected and transaction is ready to be executed or finilized
+          const recoveryRequestsReadyToBeSubmited = filteredExpiredRecoveryRequests.filter((i) => i.signaturesAcquired >= minSig);
+
+          if (recoveryRequestsReadyToBeSubmited && recoveryRequestsReadyToBeSubmited.length > 0) {
+            setRecoveryRequests(recoveryRequestsReadyToBeSubmited);
+          } else {
+            showFetchingError('You are not a guardian for this wallet')
+          }
+        }
       } catch (e) {
-        console.error(e)
-        showFetchingError('Unable to check request status')
-        return
-      }
-
-      // filter recovery requests with old nonces
-      const filteredExpiredRecoveryRequests = response.data.filter((i) => i.nonce !== nonce);
-
-      if (guardians.includes(signerAddress)) {
-        if (filteredExpiredRecoveryRequests) {
-          setRecoveryRequests(filteredExpiredRecoveryRequests);
-        } else {
-          showFetchingError(`Previous recovery requests expired for ${accountAddress}`)
-        }
-      } else {
-        // check if minSign has been collected and transaction is ready to be executed or finilized
-        const recoveryRequestsReadyToBeSubmited = filteredExpiredRecoveryRequests.filter((i) => i.signaturesAcquired >= minSig);
-
-        if (recoveryRequestsReadyToBeSubmited && recoveryRequestsReadyToBeSubmited.length > 0) {
-          setRecoveryRequests(recoveryRequestsReadyToBeSubmited);
-        } else {
-          showFetchingError('You are not a guardian for this wallet')
-        }
+        console.error(e);
       }
     }
   };
