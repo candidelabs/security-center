@@ -11,7 +11,8 @@ const coinbase = coinbaseModule()
 const walletConnect = walletConnectModule()
 const magic = magicModule({
   // public API key
-  apiKey: process.env.REACT_APP_MAGIC_LINK_PK
+  apiKey: process.env.REACT_APP_MAGIC_LINK_PK,
+  userEmail: localStorage.getItem('magicUserEmail'),
 })
 
 export const initWeb3Onboard = init({
