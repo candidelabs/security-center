@@ -65,7 +65,6 @@ const App = () => {
         provider => provider.label === 'Magic Wallet'
       );
 
-      console.log(magicWalletProvider, "magicWalletProvider");
       async function setMagicUser() {
         try {
           const { email } =
