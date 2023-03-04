@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import VConsole from 'vconsole'
 import { initWeb3Onboard } from './services'
 import {
   useConnectWallet,
@@ -15,10 +14,6 @@ import { NetworksConfig } from './utils/network'
 import { Alert, Snackbar, Stack } from '@mui/material'
 import LoadingOverlay from 'react-loading-overlay'
 require('dotenv').config()
-
-if (window.innerWidth < 700) {
-  new VConsole()
-}
 
 const App = () => {
   const [{ wallet }, connect] = useConnectWallet()
