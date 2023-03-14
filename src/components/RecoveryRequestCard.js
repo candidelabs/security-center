@@ -71,30 +71,41 @@ export const RecoveryRequestCard = props => {
     const name = await lostAccount.NAME();
     const version = await lostAccount.VERSION();
 
-    const domain = {
-      name,
-      version,
-      chainId,
-      verifyingContract: socialRecoveryAddress,
-    };
-    const types = {
-      ExecuteRecovery: [
-        { type: "address", name: "wallet" },
-        { type: "address[]", name: "newOwners" },
-        { type: "uint256", name: "newThreshold" },
-        { type: "uint256", name: "nonce" },
-      ],
-    };
-    const message = {
-      wallet: request.accountAddress,
-      newOwners: [request.newOwner],
-      newThreshold: "1",
-      nonce, // current nonce (nonce is obtained from the module not from the wallet),
+    const msgParams = JSON.stringify({
+      domain: {
+        name,
+        version,
+        chainId,
+        verifyingContract: socialRecoveryAddress,
+      },
+      message : {
+        wallet: request.accountAddress,
+        newOwners: [request.newOwner],
+        newThreshold: "1",
+        nonce, // current nonce (nonce is obtained from the module not from the wallet),
+      },
+      primaryType: 'ExecuteRecovery',
+      types : {
+        ExecuteRecovery: [
+          { type: "address", name: "wallet" },
+          { type: "address[]", name: "newOwners" },
+          { type: "uint256", name: "newThreshold" },
+          { type: "uint256", name: "nonce" },
+        ],
+      },
+    });
+
+    const customRequest = {
+      jsonrpc: "2.0",
+      method: "eth_signTypedData_v4 ",
+      params: [signerAddress, msgParams],
     };
     try {
-      const uncheckedSigner = await signer.getUncheckedSigner();
-      result = await uncheckedSigner._signTypedData(domain, types, message);
+      result = await signer.provider.request(customRequest);
     } catch (e) {
+      console.error(e, "failed to sign");
+      setSnackBarMessage("Failed to sign");
+      setOpenSnackBar(true);
       return null
     }
     setLoadingActive(true)
