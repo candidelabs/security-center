@@ -46,6 +46,7 @@ export const DBRecoveryList = props => {
 
   const fetchRecoveryRequests = async (accountAddress) => {
     setRecoveryRequests([])
+    setLoadingActive(true)
 
     if (isNetworkSupported && recoveryModuleContractInstance) {
 
@@ -62,6 +63,7 @@ export const DBRecoveryList = props => {
         });
 
         if (response.data.length === 0) {
+          setLoadingActive(false);
           setSnackBarMessage(`No new recovery requests found for ${accountAddress}`);
           setOpenSnackBar(true);
           return
@@ -81,6 +83,7 @@ export const DBRecoveryList = props => {
           setGuardianAddresses(guardians);
           setMinimumSignatures(minSig)
         } catch (e) {
+          setLoadingActive(false);
           console.error(e)
           showFetchingError('Unable to check request status')
           return
@@ -109,6 +112,7 @@ export const DBRecoveryList = props => {
         console.error(e);
       }
     }
+    setLoadingActive(false);
   };
 
   useEffect(() => {
@@ -128,7 +132,7 @@ export const DBRecoveryList = props => {
         setModuleAddressOnConnectedNetwork(socialRecoveryModuleAddress);
         getRecoveryModuleContractInstance(socialRecoveryModuleAddress);
       } else {
-        showFetchingError(`Unsupported Network. Change to ${NetworksConfig[10].name} or Goerli networks`);
+        showFetchingError(`Unsupported Network. Change to Optimism`);
       }
     }
   }, [connectedChain, connectedChain.id, signer, showFetchingError]);
@@ -147,15 +151,17 @@ export const DBRecoveryList = props => {
 
   return (
     <Stack>
-      <FinilizeCard
-        lostAccountContractInstance={recoveryModuleContractInstance}
-        lostAccountAddress={toAddress}
-        setLoadingActive={setLoadingActive}
-        setSnackBarMessage={setSnackBarMessage}
-        setOpenSnackBar={setOpenSnackBar}
-        readyToTransact={readyToTransact}
-        showFetchingError={showFetchingError} />
-      {recoveryRequests.map((object, i) => (
+      {isNetworkSupported && (
+        <FinilizeCard
+          lostAccountContractInstance={recoveryModuleContractInstance}
+          lostAccountAddress={toAddress}
+          setLoadingActive={setLoadingActive}
+          setSnackBarMessage={setSnackBarMessage}
+          setOpenSnackBar={setOpenSnackBar}
+          readyToTransact={readyToTransact}
+          showFetchingError={showFetchingError} />
+      )}
+      {isNetworkSupported && recoveryRequests.map((object, i) => (
         <RecoveryRequestCard
           guardians={guardianAddresses}
           request={object}
