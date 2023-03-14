@@ -17,24 +17,20 @@ require('dotenv').config()
 
 const App = () => {
   const [{ wallet }, connect] = useConnectWallet()
-  const [{ connectedChain }, setChain] = useSetChain()
+  const [{ connectedChain }] = useSetChain()
   const [notifications, _customNotification, updateNotify] = useNotifications()
   const connectedWallets = useWallets()
   const [web3Onboard, setWeb3Onboard] = useState(null)
+  const [recoverAccountAddressInput, setRecoverAccountAddressInput] = useState('')
   const [recoverAccountAddress, setRecoverAccountAddress] = useState('')
+  const [isChainSupported, setIsChainSupported] = useState(false);
   const [loadingActive, setLoadingActive] = useState(false)
   const [openSnackBar, setOpenSnackBar] = useState(false)
   const [snackBarMessage, setSnackBarMessage] = useState('')
+  const [alertMessage, setAlertMessage] = useState('');
 
   useEffect(() => {
     setWeb3Onboard(initWeb3Onboard)
-    const searchParams = new URLSearchParams(window.location.search)
-    if (
-      searchParams.has('lostAddress') &&
-      isValid(searchParams.get('lostAddress'))
-    ) {
-      setRecoverAccountAddress(searchParams.get('lostAddress'))
-    }
   }, [])
 
   useEffect(() => {
@@ -44,6 +40,26 @@ const App = () => {
   useEffect(() => {
     updateNotify({ position: 'bottomLeft' })
   }, [updateNotify]);
+
+  useEffect(() => {
+    const checkIfReady = async () => {
+      if (connectedChain && connectedChain.id) {
+        const ischainSupported = NetworksConfig.hasOwnProperty(Number(connectedChain.id));
+
+        if (!ischainSupported) {
+          setSnackBarMessage(`Unsupported Network. Change to one of the supported networks`);
+          setOpenSnackBar(true);
+          setIsChainSupported(false);
+          return false;
+        } else {
+          setIsChainSupported(true);
+        }
+      } else {
+        return false;
+      }
+    }
+    checkIfReady();
+  }, [connectedChain]);
 
   useEffect(() => {
     if (!connectedWallets.length) return
@@ -106,8 +122,20 @@ const App = () => {
       } else {
         return true;
       }
+    } else {
+      return false;
     }
   }
+
+  const handleOnNextSubmit = (e) => {
+    e.preventDefault();
+    if (!isValid(recoverAccountAddressInput)) {
+      setAlertMessage("Invalid Account Address");
+    } else {
+      setAlertMessage('');
+      setRecoverAccountAddress(recoverAccountAddressInput);
+    }
+  };
 
   if (!web3Onboard) return <div>Loading...</div>
 
@@ -214,26 +242,43 @@ const App = () => {
                       fontSize: '1.2rem'
                     }}
                   >
-                    Public address of lost account
+                    Type the public address of the lost account
                   </div>
                   <div style={{ height: '5px' }} />
-                  <input
-                    type="text"
-                    style={{
-                      padding: '0.5rem',
-                      border: 'none',
-                      borderRadius: '4px',
-                      width: '18rem'
-                    }}
-                    value={recoverAccountAddress}
-                    placeholder="0x153ade556......"
-                    onChange={e => setRecoverAccountAddress(e.target.value)}
-                  />
+                  <form onSubmit={handleOnNextSubmit}>
+                    <input
+                      type="text"
+                      style={{
+                        padding: '0.5rem',
+                        border: 'none',
+                        borderRadius: '4px',
+                        width: '18rem',
+                        marginRight: '10px',
+                        marginBottom: '10px',
+                      }}
+                      value={recoverAccountAddressInput}
+                      placeholder="0x153ade556......"
+                      onChange={e => setRecoverAccountAddressInput(e.target.value)}
+                      disabled={!isChainSupported}
+                    />
+                    <button
+                      className="default-button"
+                      type="submit"
+                      disabled={!isChainSupported}
+                    >
+                      Next
+                    </button>
+                  </form>
                 </div>
               </div>
             )}
+            {alertMessage && (
+              <Alert severity="info">
+                {alertMessage}
+              </Alert>
+            )}
           </Stack>
-          {isValid(recoverAccountAddress) && wallet && (
+          {recoverAccountAddress && wallet && isChainSupported && (
             <DBRecoveryList
               toAddress={recoverAccountAddress}
               setLoadingActive={setLoadingActive}
