@@ -17,7 +17,7 @@ require('dotenv').config()
 
 const App = () => {
   const [{ wallet }, connect] = useConnectWallet()
-  const [{ connectedChain }] = useSetChain()
+  const [{ connectedChain }, setChain] = useSetChain()
   const [notifications, _customNotification, updateNotify] = useNotifications()
   const connectedWallets = useWallets()
   const [web3Onboard, setWeb3Onboard] = useState(null)
@@ -124,6 +124,21 @@ const App = () => {
       }
     } else {
       return false;
+    }
+  }
+
+  const setChainIdToOptimism = async () => {
+    try {
+      // OPTIMISM ONLY
+      const correctChainId = await setChain({ chainId: "0xa" });
+
+      if (correctChainId) {
+        setIsChainSupported(true);
+      }
+    } catch (e) {
+      console.error(e, "chain switch");
+      setSnackBarMessage("Couldn't send a request. Please switch to Optimism directly from your wallet");
+      setOpenSnackBar(true);
     }
   }
 
@@ -271,6 +286,14 @@ const App = () => {
                   </form>
                 </div>
               </div>
+            )}
+            {wallet && !isChainSupported && (
+              <button
+                className="default-button-red"
+                onClick={() => setChainIdToOptimism()}
+              >
+                Switch to Optimism
+              </button>
             )}
             {alertMessage && (
               <Alert severity="info">

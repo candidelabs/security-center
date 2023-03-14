@@ -18,24 +18,24 @@ const magic = magicModule({
 export const initWeb3Onboard = init({
   wallets: [injected, walletConnect, coinbase, magic],
   chains: [
-    {
-      id: '0x5',
-      token: 'gETH',
-      label: 'Gorli',
-      rpcUrl: process.env.REACT_APP_GOERLI_RPC
-    },
-    {
-      id: '0x1a4',
-      token: 'ETH',
-      label: 'Optimism Gorli',
-      rpcUrl: process.env.REACT_APP_OPTIMISM_GOERLI_RPC
-    },
     // {
-    //   id: '0xa',
-    //   token: 'ETH',
-    //   label: 'Optimism',
-    //   rpcUrl: process.env.REACT_APP_OPTIMISM
+    //   id: '0x5',
+    //   token: 'gETH',
+    //   label: 'Gorli',
+    //   rpcUrl: process.env.REACT_APP_GOERLI_RPC
     // },
+    // {
+    //   id: '0x1a4',
+    //   token: 'ETH',
+    //   label: 'Optimism Gorli',
+    //   rpcUrl: process.env.REACT_APP_OPTIMISM_GOERLI_RPC
+    // },
+    {
+      id: '0xa',
+      token: 'ETH',
+      label: 'Optimism',
+      rpcUrl: process.env.REACT_APP_OPTIMISM
+    },
   ],
   appMetadata: {
     name: 'Candide Security',
@@ -65,7 +65,7 @@ export const initWeb3Onboard = init({
           autoDismiss: 0,
           // TODO: ensure we set up the proper block explorers for each chain
           onClick: () =>
-            window.open(`https://goerli.etherscan.io/tx/${transaction.hash}`)
+            window.open(`https://optimism.etherscan.io/tx/${transaction.hash}`)
         }
       }
     }
