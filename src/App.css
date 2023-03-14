@@ -96,6 +96,18 @@ div.account-center-actions > div {
   transition: background 200ms ease-in-out, color 200ms ease-in-out;
 }
 
+.default-button-red {
+  background: red;
+  border-radius: 90%;
+  font-size: 0.889rem;
+  font-weight: bold;
+  border: 1px solid #eeeeee;
+  border-radius: 4px;
+  padding: 0.55rem 1.4rem;
+  color: #F8ECE1;
+  transition: background 200ms ease-in-out, color 200ms ease-in-out;
+}
+
 
 .default-button:disabled {
   cursor: not-allowed !important;
