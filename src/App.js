@@ -71,24 +71,6 @@ const App = () => {
       'connectedWallets',
       JSON.stringify(connectedWalletsLabelArray)
     )
-    if (connectedWalletsLabelArray.includes('Magic Wallet')) {
-      const [magicWalletProvider] = connectedWallets.filter(
-        provider => provider.label === 'Magic Wallet'
-      );
-
-      async function setMagicUser() {
-        try {
-          const { email } =
-            await magicWalletProvider.instance.user.getMetadata()
-          const magicUserEmail = localStorage.getItem('magicUserEmail')
-          if (!magicUserEmail || magicUserEmail !== email)
-            localStorage.setItem('magicUserEmail', email)
-        } catch (err) {
-          throw err
-        }
-      }
-      setMagicUser()
-    }
   }, [connectedWallets, wallet])
 
   useEffect(() => {
@@ -209,20 +191,7 @@ const App = () => {
                       textAlign: 'center'
                     }}
                   >
-                    Connect your Recovery Contact Wallet*
-                  </div>
-                </Stack>
-                <Stack>
-                  <div
-                    style={{
-                      fontFamily: 'Gilroy',
-                      color: '#1F2546',
-                      fontSize: '1rem',
-                      textAlign: 'center'
-                    }}
-                  >
-                    * If you have email recovery enabled, choose the{' '}
-                    <b>Magic Wallet</b> Option
+                    Connect your Recovery Contact Wallet
                   </div>
                 </Stack>
                 <Stack
