@@ -25,13 +25,13 @@ export const initWeb3Onboard = init({
       rpcUrl: process.env.REACT_APP_GOERLI_RPC
     },
     {
-      id: '0x1A4',
+      id: '0x1a4',
       token: 'ETH',
       label: 'Optimism Gorli',
       rpcUrl: process.env.REACT_APP_OPTIMISM_GOERLI_RPC
     },
     // {
-    //   id: '0xA',
+    //   id: '0xa',
     //   token: 'ETH',
     //   label: 'Optimism',
     //   rpcUrl: process.env.REACT_APP_OPTIMISM
