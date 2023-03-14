@@ -2,21 +2,15 @@ import logo from './icons/logo.png'
 
 import { init } from '@web3-onboard/react'
 import injectedModule from '@web3-onboard/injected-wallets'
-import magicModule from '@web3-onboard/magic'
 import walletConnectModule from '@web3-onboard/walletconnect'
 import coinbaseModule from '@web3-onboard/coinbase'
 
 const injected = injectedModule()
 const coinbase = coinbaseModule()
 const walletConnect = walletConnectModule()
-const magic = magicModule({
-  // public API key
-  apiKey: process.env.REACT_APP_MAGIC_LINK_PK,
-  userEmail: localStorage.getItem('magicUserEmail'),
-})
 
 export const initWeb3Onboard = init({
-  wallets: [injected, walletConnect, coinbase, magic],
+  wallets: [injected, walletConnect, coinbase],
   chains: [
     // {
     //   id: '0x5',
