@@ -14,13 +14,6 @@ const initNetworksConfig = () => {
       client: process.env.REACT_APP_OPTIMISM_GOERLI_RPC,
       blockExplorer: "https://goerli-optimism.etherscan.io",
     },
-    0xa: {
-      name: "Optimism",
-      chainId: "10",
-      socialRecoveryModuleAddress: "0x8fe391F70B6d3fe30920D9a91cd9ba34a2D9f6FB",
-      client: process.env.REACT_APP_OPTIMISM,
-      blockExplorer: "https://optimism.etherscan.io",
-    },
   };
 };
 
