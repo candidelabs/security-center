@@ -91,10 +91,10 @@ const FinilizeCard = (props) => {
 
                 setTimeout(async () =>
                     await fetchToBeFinilizedRecoveryRequests(lostAccountAddress),
-                    6000,
+                    3000,
                 );
 
-                setTimeout(setLoadingActive(false), 6000);
+                setTimeout(setLoadingActive(false), 3000);
             }
         }
         catch (e) {

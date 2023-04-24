@@ -194,7 +194,7 @@ export const RecoveryRequestCard = props => {
 
       setTimeout(
         async () => await fetchRecoveryRequests(accountAddress, socialRecoveryAddress),
-        6000,
+        3000,
       );
 
     } catch (e) {
@@ -304,7 +304,7 @@ export const RecoveryRequestCard = props => {
 
         setTimeout(
           async () => await fetchRecoveryRequests(accountAddress, socialRecoveryAddress),
-          6000,
+          3000,
         );
       } else {
         setTimeout(
