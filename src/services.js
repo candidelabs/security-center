@@ -5,9 +5,16 @@ import injectedModule from '@web3-onboard/injected-wallets'
 import walletConnectModule from '@web3-onboard/walletconnect'
 import coinbaseModule from '@web3-onboard/coinbase'
 
+const wcV2InitOptions = {
+  projectId: process.env.REACT_APP_WC_KEY,
+  requiredChains: [10],
+  dappUrl: "http://security.candidewallet.com",
+};
+
+
 const injected = injectedModule()
 const coinbase = coinbaseModule()
-const walletConnect = walletConnectModule()
+const walletConnect = walletConnectModule(wcV2InitOptions)
 
 export const initWeb3Onboard = init({
   wallets: [injected, walletConnect, coinbase],
