@@ -6,9 +6,15 @@ import magicModule from '@web3-onboard/magic'
 import walletConnectModule from '@web3-onboard/walletconnect'
 import coinbaseModule from '@web3-onboard/coinbase'
 
+const wcV2InitOptions = {
+  projectId: process.env.REACT_APP_WC_KEY,
+  requiredChains: [],
+  dappUrl: "http://testnet-security.candidewallet.com",
+};
+
 const injected = injectedModule()
 const coinbase = coinbaseModule()
-const walletConnect = walletConnectModule()
+const walletConnect = walletConnectModule(wcV2InitOptions)
 const magic = magicModule({
   // public API key
   apiKey: process.env.REACT_APP_MAGIC_LINK_PK,
